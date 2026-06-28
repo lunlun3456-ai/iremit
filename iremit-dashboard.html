@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>iRemit Sales Dashboard</title>
+<style>
+:root {
+  --nv: #1a3a5c;
+  --gd: #e8b84b;
+  --gdl: #fdf3d8;
+  --gn: #27ae60;
+  --gnl: #eafaf1;
+  --rd: #e74c3c;
+  --rdl: #fdecea;
+  --og: #f39c12;
+  --ogl: #fef3e2;
+  --bl: #2980b9;
+  --bll: #ebf5fb;
+  --bg: #f0f4f8;
+  --wh: #fff;
+  --br: #dce3ea;
+  --tx: #1a2533;
+  --mt: #7f8c9a;
+  --r: 8px;
+  --rl: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--tx);
+  font-size: 14px;
+  min-height: 100vh;
+  overscroll-behavior: none;
+}
+.hdr {
+  background: var(--nv);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+}
+.logo {
+  width: 36px;
+  height: 36px;
+  background: var(--gd);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.hdr-info { flex: 1; }
+.hdr-title { font-size: 15px; font-weight: 700; }
+.hdr-sub { font-size: 11px; opacity: .6; margin-top: 1px; }
+.hdr-right { display: flex; align-items: center; gap: 8px; }
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,.12);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: default;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mt); }
+.dot.on { background: var(--gn); }
+.dot.err { background: var(--rd); }
+.dot.busy { background: var(--gd); animation: blink .6s infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+.hbtn {
+  background: rgba(255,255,255,.15);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hbtn:active { background: rgba(255,255,255,.3); }
+
+/* Setup screen */
+.setup-screen {
+  padding: 20px 16px;
+  display: none;
+}
+.setup-card {
+  background: var(--wh);
+  border-radius: var(--rl);
+  padding: 20px;
+  border: 1px solid var(--br);
+}
+.setup-card h2 { font-size: 16px; color: var(--nv); margin-bottom: 6px; }
+.setup-card p { font-size: 12px; color: var(--mt); margin-bottom: 16px; line-height: 1.6; }
+.fg { margin-bottom: 14px; }
+.fg label { display: block; font-size: 11px; font-weight: 700; color: var(--mt); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.fg input {
+  width: 100%;
+  border: 1.5px solid var(--br);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  transition: border .2s;
+  -webkit-appearance: none;
+}
+.fg input:focus { border-color: var(--nv); }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--r);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: opacity .15s, transform .1s;
+  -webkit-appearance: none;
+}
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-primary { background: var(--nv); color: #fff; width: 100%; padding: 12px; font-size: 14px; }
+.btn-success { background: var(--gn); color: #fff; }
+.btn-ghost { background: var(--br); color: var(--tx); }
+.setup-status {
+  border-radius: var(--r);
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 10px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.setup-status.ok { background: var(--gnl); color: var(--gn); display: flex; }
+.setup-status.err { background: var(--rdl); color: var(--rd); display: flex; }
+.setup-status.busy { background: var(--bll); color: var(--bl); display: flex; }
+
+/* Main dashboard */
+.main { display: none; }
+
+/* Date nav */
+.date-nav {
+  background: var(--wh);
+  border-bottom: 1px solid var(--br);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: sticky;
+  top: 64px;
+  z-index: 90;
+}
+.date-label { font-size: 14px; font-weight: 700; color: var(--nv); }
+.date-sub { font-size: 11px; color: var(--mt); }
+.nav-btn {
+  background: var(--bg);
+  border: 1px solid var(--br);
+  border-radius: var(--r);
+  color: var(--nv);
+  width: 34px;
+  height: 34px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+.nav-btn:active { background: var(--nv); color: #fff; }
+.today-btn {
+  background: var(--gd);
+  color: var(--nv);
+  border: none;
+  border-radius: var(--r);
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Scroll area */
+.scroll { padding: 12px 14px; }
+
+/* Summary cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.scard {
+  background: var(--wh);
+  border-radius: var(--rl);
+  padding: 12px 14px;
+  border: 1px solid var(--br);
+}
+.scard .label { font-size: 10px; font-weight: 700; color: var(--mt); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.scard .value { font-size: 22px; font-weight: 800; color: var(--nv); line-height: 1; }
+.scard .value.green { color: var(--gn); }
+.scard .value.gold { color: #c47f0a; }
+.scard .sub { font-size: 10px; color: var(--mt); margin-top: 3px; }
+.scard-wide {
+  background: linear-gradient(135deg, var(--nv), #2d5a8e);
+  border-radius: var(--rl);
+  padding: 14px 16px;
+  border: none;
+  margin-bottom: 14px;
+}
+.scard-wide .label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.scard-wide .value { font-size: 28px; font-weight: 800; color: var(--gd); line-height: 1; }
+.scard-wide .value span { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.5); margin-right: 4px; }
+.scard-wide .sub { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 4px; }
+
+/* Operator breakdown */
+.section-title {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--mt);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--br);
+  margin-bottom: 10px;
+}
+.op-row {
+  background: var(--wh);
+  border: 1px solid var(--br);
+  border-radius: var(--r);
+  padding: 11px 13px;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.op-info { flex: 1; min-width: 0; }
+.op-name { font-size: 13px; font-weight: 700; color: var(--nv); }
+.op-meta { font-size: 11px; color: var(--mt); margin-top: 2px; }
+.op-amt { text-align: right; }
+.op-total { font-size: 14px; font-weight: 800; color: var(--nv); }
+.op-count { font-size: 10px; color: var(--mt); margin-top: 1px; }
+
+/* Transaction list */
+.tx-row {
+  background: var(--wh);
+  border: 1px solid var(--br);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  margin-bottom: 7px;
+  cursor: pointer;
+  transition: box-shadow .15s;
+}
+.tx-row:active { box-shadow: 0 2px 12px rgba(0,0,0,.1); }
+.tx-row.cancelled { opacity: .55; border-left: 3px solid var(--rd); }
+.tx-row.non-paid { border-left: 3px solid var(--bl); }
+.tx-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+.tx-name { font-size: 13px; font-weight: 700; color: var(--nv); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+.tx-amt { font-size: 14px; font-weight: 800; color: var(--tx); }
+.tx-mid { font-size: 11px; color: var(--mt); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-bot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 12px;
+  display: inline-block;
+}
+.badge-paid { background: #d4edda; color: #155724; border: 1px solid #a8d5b7; }
+.badge-post { background: #d4edda; color: #155724; border: 1px solid #a8d5b7; }
+.badge-cancel { background: var(--rdl); color: var(--rd); border: 1px solid #f5b7b1; }
+.badge-hold { background: #fff3cd; color: #856404; border: 1px solid #ffd97a; }
+.badge-api { background: var(--bll); color: #004085; border: 1px solid #b8daff; }
+.badge-other { background: var(--bg); color: var(--mt); border: 1px solid var(--br); }
+.badge-free { background: var(--gnl); color: var(--gn); border: 1px solid #a9dfbf; }
+.tx-fee { font-size: 10px; color: var(--mt); }
+
+/* Chart section */
+.chart-wrap {
+  background: var(--wh);
+  border: 1px solid var(--br);
+  border-radius: var(--rl);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.chart-title { font-size: 12px; font-weight: 700; color: var(--nv); margin-bottom: 10px; }
+.chart-canvas-wrap { position: relative; width: 100%; height: 160px; }
+
+/* Country breakdown */
+.country-bar {
+  margin-bottom: 8px;
+}
+.country-label { font-size: 11px; display: flex; justify-content: space-between; margin-bottom: 3px; }
+.country-name { font-weight: 600; color: var(--tx); }
+.country-val { color: var(--mt); }
+.bar-track { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--nv); border-radius: 3px; transition: width .5s; }
+
+/* Empty state */
+.empty { text-align: center; padding: 36px 20px; color: var(--mt); }
+.empty .ei { font-size: 36px; margin-bottom: 10px; }
+.empty p { font-size: 12px; line-height: 1.7; }
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--mt);
+  font-size: 13px;
+}
+.spin {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(26,58,92,.2);
+  border-top-color: var(--nv);
+  border-radius: 50%;
+  animation: sp .7s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes sp { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--nv);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 999;
+  transition: transform .25s;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.ok { background: var(--gn); }
+.toast.err { background: var(--rd); }
+
+/* Date input for filters */
+.filter-row {
+  background: var(--wh);
+  border-bottom: 1px solid var(--br);
+  padding: 8px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.date-input {
+  border: 1.5px solid var(--br);
+  border-radius: var(--r);
+  padding: 6px 8px;
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+  color: var(--tx);
+  background: var(--bg);
+  -webkit-appearance: none;
+}
+.date-input:focus { border-color: var(--nv); }
+.filter-label { font-size: 11px; color: var(--mt); white-space: nowrap; }
+.clear-btn {
+  font-size: 11px;
+  color: var(--bl);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0;
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div style="display:flex;align-items:center;">
+    <div class="logo">💱</div>
+    <div class="hdr-info">
+      <div class="hdr-title">iRemit Sales</div>
+      <div class="hdr-sub">Akbar · Tawau</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="pill"><div class="dot" id="syncDot"></div><span id="syncLabel">Offline</span></div>
+    <button class="hbtn" id="btnSetup" title="Settings">⚙️</button>
+    <button class="hbtn" id="btnRefresh" title="Refresh" style="display:none;">🔄</button>
+  </div>
+</header>
+
+<!-- SETUP SCREEN -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-card">
+    <h2>💱 Connect to Google Sheets</h2>
+    <p>Paste your Apps Script Web App URL below to view live sales data. This is the same URL from the SETUP_GUIDE — no extra steps needed.</p>
+    <div class="fg">
+      <label>Web App URL</label>
+      <input type="url" id="gsUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="fg">
+      <label>Secret Key</label>
+      <input type="text" id="gsKey" placeholder="iremit2024newakbar" autocomplete="off">
+    </div>
+    <button class="btn btn-success" id="btnTest" style="width:100%;margin-bottom:8px;">🔌 Test Connection</button>
+    <button class="btn btn-primary" id="btnSave">✅ Save &amp; Connect</button>
+    <div class="setup-status" id="setupStatus"></div>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="main" id="mainScreen">
+
+  <div class="date-nav">
+    <button class="nav-btn" id="btnPrevDay">&#8249;</button>
+    <div style="text-align:center;flex:1;">
+      <div class="date-label" id="dateLabel">Today</div>
+      <div class="date-sub" id="dateSub"></div>
+    </div>
+    <button class="nav-btn" id="btnNextDay">&#8250;</button>
+    <button class="today-btn" id="btnToday">TODAY</button>
+  </div>
+
+  <div class="filter-row" id="filterRow" style="display:none;">
+    <span class="filter-label">From</span>
+    <input type="date" class="date-input" id="filterFrom">
+    <span class="filter-label">To</span>
+    <input type="date" class="date-input" id="filterTo">
+    <button class="clear-btn" id="btnClearFilter">✕ Clear</button>
+  </div>
+
+  <div class="scroll" id="scrollArea">
+    <div class="loading" id="loadingMsg"><span class="spin"></span> Loading data…</div>
+    <div id="dashContent" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const API_URL_KEY = 'iremit_gs_url';
+const API_KEY_KEY = 'iremit_gs_key';
+const DEFAULT_KEY = 'iremit2024newakbar';
+
+let gsUrl = '';
+let gsKey = DEFAULT_KEY;
+let allCustomers = [];
+let currentDate = today();
+let isRangeMode = false;
+let chartInstance = null;
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch(e) { return d; }
+}
+
+function fmtRM(v) {
+  return parseFloat(v || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '') + ' show';
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+function setSyncStatus(s) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'dot';
+  if (s === 'on') { dot.classList.add('on'); lbl.textContent = 'Synced'; }
+  else if (s === 'busy') { dot.classList.add('busy'); lbl.textContent = 'Loading…'; }
+  else { dot.classList.add('err'); lbl.textContent = 'Offline'; }
+}
+
+async function callAPI(action, extra) {
+  const payload = Object.assign({ action, key: gsKey }, extra || {});
+  const res = await fetch(gsUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+    redirect: 'follow'
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'API error');
+  return data;
+}
+
+function getAllTx() {
+  const txList = [];
+  allCustomers.forEach(c => {
+    const txs = c.transactions;
+    if (!txs) return;
+    const arr = Array.isArray(txs) ? txs : Object.values(txs);
+    arr.forEach(tx => txList.push({ c, tx }));
+  });
+  return txList;
+}
+
+function isCancelled(tx) {
+  const st = (tx.status || 'PAID').toUpperCase();
+  return st !== 'PAID' && st !== 'POST';
+}
+
+function statusBadgeClass(tx) {
+  const st = (tx.status || 'PAID').toUpperCase().replace(/\s+/g, '-');
+  if (st === 'PAID') return 'badge-paid';
+  if (st === 'POST') return 'badge-post';
+  if (st === 'CANCELLED') return 'badge-cancel';
+  if (st === 'HOLD' || st === 'COMPLIANCE' || st === 'UNPAID') return 'badge-hold';
+  if (st === 'API-PROCESSING' || st === 'PROCESSING' || st === 'PENDING') return 'badge-api';
+  return 'badge-other';
+}
+
+function statusLabel(tx) {
+  const st = (tx.status || 'PAID').toUpperCase().replace(/\s+/g, '-');
+  const map = {
+    'PAID': '✅ PAID', 'POST': '📤 POST', 'CANCELLED': '❌ CANCELLED',
+    'HOLD': '⏸ HOLD', 'COMPLIANCE': '⛔ COMPLIANCE', 'UNPAID': '⛔ UNPAID',
+    'API-PROCESSING': '⚙ PROCESSING', 'PROCESSING': '⏳ PROCESSING', 'PENDING': '⏳ PENDING'
+  };
+  return map[st] || st;
+}
+
+function getDateRange() {
+  const from = document.getElementById('filterFrom').value;
+  const to = document.getElementById('filterTo').value;
+  return { from, to };
+}
+
+function getTxTotal(tx) {
+  return parseFloat(tx.totalCollected) || ((parseFloat(tx.amountRM) || 0) + (parseFloat(tx.serviceFee) || 0));
+}
+
+function renderDashboard() {
+  const { from, to } = getDateRange();
+  const useRange = !!(from || to);
+  const dateFilter = useRange ? null : currentDate;
+
+  let all = getAllTx();
+
+  if (useRange) {
+    all = all.filter(({ tx }) => {
+      const d = tx.date || '';
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    });
+  } else {
+    all = all.filter(({ tx }) => {
+      const d = tx.date || (tx.capturedAt || '').split('T')[0] || '';
+      return d === dateFilter;
+    });
+  }
+
+  all.sort((a, b) => {
+    const ka = txSortKey(b.tx);
+    const kb = txSortKey(a.tx);
+    return ka - kb;
+  });
+
+  const paidTx = all.filter(({ tx }) => !isCancelled(tx));
+  const cancelledTx = all.filter(({ tx }) => isCancelled(tx));
+  const totalCollected = paidTx.reduce((s, { tx }) => s + getTxTotal(tx), 0);
+  const totalRemit = paidTx.reduce((s, { tx }) => s + (parseFloat(tx.amountRM) || 0), 0);
+  const totalFee = paidTx.reduce((s, { tx }) => s + (parseFloat(tx.serviceFee) || 0), 0);
+  const cancelAmt = cancelledTx.reduce((s, { tx }) => s + getTxTotal(tx), 0);
+
+  // Per-operator breakdown (paid only)
+  const byOp = {};
+  paidTx.forEach(({ tx }) => {
+    const op = tx.tellerId || '(no operator)';
+    if (!byOp[op]) byOp[op] = { count: 0, total: 0 };
+    byOp[op].count++;
+    byOp[op].total += getTxTotal(tx);
+  });
+  const opEntries = Object.entries(byOp).sort((a, b) => b[1].total - a[1].total);
+
+  // Country breakdown
+  const byCountry = {};
+  paidTx.forEach(({ tx }) => {
+    const co = tx.country || 'Unknown';
+    if (!byCountry[co]) byCountry[co] = 0;
+    byCountry[co] += parseFloat(tx.amountRM) || 0;
+  });
+  const countryEntries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const maxCountry = countryEntries.length ? countryEntries[0][1] : 1;
+
+  // Daily chart data (last 7 days, for non-range single day view)
+  let chartHtml = '';
+  if (!useRange) {
+    const days7 = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(currentDate + 'T00:00:00');
+      d.setDate(d.getDate() - i);
+      days7.push(d.toISOString().split('T')[0]);
+    }
+    const chartData = days7.map(d => {
+      const dayTx = getAllTx().filter(({ tx }) => {
+        const td = tx.date || (tx.capturedAt || '').split('T')[0] || '';
+        return td === d && !isCancelled(tx);
+      });
+      return { d, val: dayTx.reduce((s, { tx }) => s + getTxTotal(tx), 0) };
+    });
+
+    chartHtml = `
+    <div class="chart-wrap">
+      <div class="chart-title">📈 7-Day Collection (RM)</div>
+      <div class="chart-canvas-wrap">
+        <canvas id="chartCanvas" role="img" aria-label="7-day total collection bar chart">Daily collection totals for the past 7 days.</canvas>
+      </div>
+    </div>
+    <script>
+    (function() {
+      if (window._iremitChart) { try { window._iremitChart.destroy(); } catch(e){} }
+      const ctx = document.getElementById('chartCanvas');
+      if (!ctx) return;
+      const labels = ${JSON.stringify(days7.map(d => { const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric' }); }))};
+      const vals = ${JSON.stringify(chartData.map(r => Math.round(r.val * 100) / 100))};
+      const bg = vals.map((_, i) => i === 6 ? '#e8b84b' : '#1a3a5c');
+      window._iremitChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Total (RM)', data: vals, backgroundColor: bg, borderRadius: 4, borderSkipped: 'bottom' }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#7f8c9a' } },
+            y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { font: { size: 10 }, color: '#7f8c9a', callback: v => 'RM' + v.toLocaleString('en-MY') } }
+          }
+        }
+      });
+    })();
+    <\/script>`;
+  }
+
+  let html = '';
+
+  // Hero total
+  html += `<div class="scard-wide">
+    <div class="label">Total Collected${useRange && (from || to) ? ' (filtered range)' : ''}</div>
+    <div class="value"><span>RM</span>${fmtRM(totalCollected)}</div>
+    <div class="sub">${paidTx.length} confirmed tx · RM${fmtRM(totalRemit)} remit + RM${fmtRM(totalFee)} fees</div>
+  </div>`;
+
+  // Summary cards
+  html += `<div class="summary-grid">
+    <div class="scard">
+      <div class="label">Transactions</div>
+      <div class="value">${paidTx.length}</div>
+      <div class="sub">${cancelledTx.length > 0 ? cancelledTx.length + ' cancelled' : 'none cancelled'}</div>
+    </div>
+    <div class="scard">
+      <div class="label">Service Fees</div>
+      <div class="value green">RM${fmtRM(totalFee)}</div>
+      <div class="sub">avg RM${fmtRM(paidTx.length ? totalFee / paidTx.length : 0)}/tx</div>
+    </div>
+    <div class="scard">
+      <div class="label">Avg per TX</div>
+      <div class="value gold">RM${fmtRM(paidTx.length ? totalCollected / paidTx.length : 0)}</div>
+      <div class="sub">amount remitted</div>
+    </div>
+    <div class="scard">
+      <div class="label">Cancelled</div>
+      <div class="value" style="color:${cancelledTx.length > 0 ? 'var(--rd)' : 'var(--gn)'}">${cancelledTx.length}</div>
+      <div class="sub">RM${fmtRM(cancelAmt)} lost</div>
+    </div>
+  </div>`;
+
+  // Chart
+  html += chartHtml;
+
+  // Operator breakdown
+  if (opEntries.length > 0) {
+    html += `<div class="section-title">👤 Operator Breakdown</div>`;
+    opEntries.forEach(([op, s]) => {
+      html += `<div class="op-row">
+        <div class="op-info">
+          <div class="op-name">${esc(op)}</div>
+          <div class="op-meta">${s.count} tx · avg RM${fmtRM(s.total / s.count)}</div>
+        </div>
+        <div class="op-amt">
+          <div class="op-total">RM ${fmtRM(s.total)}</div>
+          <div class="op-count">collected</div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Country breakdown
+  if (countryEntries.length > 0) {
+    html += `<div class="section-title" style="margin-top:14px;">🌍 By Destination</div>`;
+    html += `<div class="scard" style="margin-bottom:14px;">`;
+    countryEntries.forEach(([co, amt]) => {
+      const pct = Math.round((amt / (totalRemit || 1)) * 100);
+      html += `<div class="country-bar">
+        <div class="country-label">
+          <span class="country-name">${esc(co)}</span>
+          <span class="country-val">RM${fmtRM(amt)} · ${pct}%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Recent transactions
+  html += `<div class="section-title" style="margin-top:14px;">📋 Transactions (${all.length})</div>`;
+
+  if (all.length === 0) {
+    html += `<div class="empty"><div class="ei">📭</div><p>No transactions${useRange ? ' in this date range' : ' on this date'}.</p></div>`;
+  } else {
+    all.forEach(({ c, tx }) => {
+      const st = (tx.status || 'PAID').toUpperCase().replace(/\s+/g, '-');
+      const isCancelledRow = isCancelled(tx);
+      const isNonPaid = !isCancelledRow && st !== 'PAID';
+      const totalAmt = getTxTotal(tx);
+      const isFree = tx.isFree === true || tx.isFree === 'TRUE';
+
+      let rowClass = 'tx-row';
+      if (isCancelledRow) rowClass += ' cancelled';
+      else if (isNonPaid) rowClass += ' non-paid';
+
+      html += `<div class="${rowClass}">
+        <div class="tx-top">
+          <div class="tx-name">${esc(c.name)}</div>
+          <div class="tx-amt">RM ${fmtRM(totalAmt)}</div>
+        </div>
+        <div class="tx-mid">→ ${esc(tx.receiver || '—')}${tx.country ? ' · ' + esc(tx.country) : ''}</div>
+        <div class="tx-bot">
+          <span class="badge ${statusBadgeClass(tx)}">${statusLabel(tx)}</span>
+          ${isFree && !isCancelledRow ? '<span class="badge badge-free">🎁 FREE</span>' : ''}
+          ${tx.tellerId ? `<span class="badge badge-other">👤${esc(tx.tellerId)}</span>` : ''}
+          ${tx.txNo ? `<span class="badge badge-other" style="font-size:9px;color:var(--mt);">${esc(tx.txNo)}</span>` : ''}
+        </div>
+        ${tx.amountRM && tx.serviceFee ? `<div class="tx-fee" style="margin-top:4px;">RM${fmtRM(tx.amountRM)} remit + RM${fmtRM(tx.serviceFee)} fee${tx.time ? ' · ' + tx.time : ''}</div>` : ''}
+      </div>`;
+    });
+  }
+
+  const content = document.getElementById('dashContent');
+  content.innerHTML = html;
+  document.getElementById('loadingMsg').style.display = 'none';
+  content.style.display = 'block';
+}
+
+function txSortKey(tx) {
+  if (!tx) return 0;
+  const date = tx.date || (tx.capturedAt || '').split('T')[0] || '';
+  if (!date) return new Date(tx.capturedAt || 0).getTime() || 0;
+  if (tx.time) {
+    const m = tx.time.match(/(\d{1,2}):(\d{2}):(\d{2})\s*([AP]M)/i);
+    if (m) {
+      let hh = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10), ss = parseInt(m[3], 10);
+      const ap = m[4].toUpperCase();
+      if (ap === 'PM' && hh !== 12) hh += 12;
+      if (ap === 'AM' && hh === 12) hh = 0;
+      const dt = new Date(date + 'T00:00:00');
+      if (!isNaN(dt.getTime())) { dt.setHours(hh, mm, ss, 0); return dt.getTime(); }
+    }
+  }
+  return new Date(date + 'T00:00:00').getTime() || 0;
+}
+
+function updateDateHeader() {
+  const { from, to } = getDateRange();
+  const useRange = !!(from || to);
+
+  if (useRange) {
+    document.getElementById('dateLabel').textContent = 'Custom Range';
+    document.getElementById('dateSub').textContent = (from || '…') + ' → ' + (to || '…');
+    return;
+  }
+
+  const d = new Date(currentDate + 'T00:00:00');
+  const todayStr = today();
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  const yesterdayStr = yest.toISOString().split('T')[0];
+
+  if (currentDate === todayStr) {
+    document.getElementById('dateLabel').textContent = 'Today';
+  } else if (currentDate === yesterdayStr) {
+    document.getElementById('dateLabel').textContent = 'Yesterday';
+  } else {
+    document.getElementById('dateLabel').textContent = d.toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+  document.getElementById('dateSub').textContent = d.toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+async function loadData() {
+  document.getElementById('loadingMsg').style.display = 'block';
+  document.getElementById('dashContent').style.display = 'none';
+  setSyncStatus('busy');
+  try {
+    const r = await callAPI('getAll');
+    if (r && r.customers) {
+      allCustomers = r.customers;
+      setSyncStatus('on');
+      toast('✅ Updated!', 'ok');
+    }
+  } catch(e) {
+    setSyncStatus('err');
+    toast('⚠ ' + e.message, 'err');
+  }
+  updateDateHeader();
+  renderDashboard();
+}
+
+function showSetup() {
+  document.getElementById('setupScreen').style.display = 'block';
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('btnRefresh').style.display = 'none';
+  // Fill saved values
+  const savedUrl = localStorage.getItem(API_URL_KEY) || '';
+  const savedKey = localStorage.getItem(API_KEY_KEY) || DEFAULT_KEY;
+  document.getElementById('gsUrl').value = savedUrl;
+  document.getElementById('gsKey').value = savedKey;
+  document.getElementById('setupStatus').className = 'setup-status';
+}
+
+function showMain() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = 'block';
+  document.getElementById('btnRefresh').style.display = 'flex';
+}
+
+function init() {
+  const savedUrl = localStorage.getItem(API_URL_KEY);
+  const savedKey = localStorage.getItem(API_KEY_KEY);
+  if (savedUrl) {
+    gsUrl = savedUrl;
+    gsKey = savedKey || DEFAULT_KEY;
+    showMain();
+    currentDate = today();
+    updateDateHeader();
+    loadData();
+  } else {
+    showSetup();
+  }
+}
+
+// Setup handlers
+document.getElementById('btnSetup').addEventListener('click', showSetup);
+
+document.getElementById('btnTest').addEventListener('click', async () => {
+  const url = document.getElementById('gsUrl').value.trim();
+  const key = document.getElementById('gsKey').value.trim() || DEFAULT_KEY;
+  const st = document.getElementById('setupStatus');
+  if (!url) { st.className = 'setup-status err'; st.textContent = '⚠ Please enter the Web App URL.'; return; }
+  st.className = 'setup-status busy'; st.textContent = '⏳ Testing…';
+  try {
+    gsUrl = url; gsKey = key;
+    const r = await callAPI('ping');
+    st.className = 'setup-status ok'; st.textContent = '✅ Connected! ' + (r.message || '');
+  } catch(e) {
+    st.className = 'setup-status err'; st.textContent = '❌ ' + e.message;
+  }
+});
+
+document.getElementById('btnSave').addEventListener('click', () => {
+  const url = document.getElementById('gsUrl').value.trim();
+  const key = document.getElementById('gsKey').value.trim() || DEFAULT_KEY;
+  const st = document.getElementById('setupStatus');
+  if (!url) { st.className = 'setup-status err'; st.textContent = '⚠ Please enter the Web App URL.'; return; }
+  gsUrl = url; gsKey = key;
+  localStorage.setItem(API_URL_KEY, url);
+  localStorage.setItem(API_KEY_KEY, key);
+  showMain();
+  currentDate = today();
+  updateDateHeader();
+  loadData();
+});
+
+// Date nav
+document.getElementById('btnPrevDay').addEventListener('click', () => {
+  const d = new Date(currentDate + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  currentDate = d.toISOString().split('T')[0];
+  updateDateHeader();
+  renderDashboard();
+});
+
+document.getElementById('btnNextDay').addEventListener('click', () => {
+  const d = new Date(currentDate + 'T00:00:00');
+  d.setDate(d.getDate() + 1);
+  currentDate = d.toISOString().split('T')[0];
+  updateDateHeader();
+  renderDashboard();
+});
+
+document.getElementById('btnToday').addEventListener('click', () => {
+  currentDate = today();
+  document.getElementById('filterFrom').value = '';
+  document.getElementById('filterTo').value = '';
+  document.getElementById('filterRow').style.display = 'none';
+  updateDateHeader();
+  renderDashboard();
+});
+
+document.getElementById('btnRefresh').addEventListener('click', loadData);
+
+// Filter handlers
+document.getElementById('filterFrom').addEventListener('change', () => {
+  document.getElementById('filterRow').style.display = 'flex';
+  updateDateHeader();
+  renderDashboard();
+});
+document.getElementById('filterTo').addEventListener('change', () => {
+  document.getElementById('filterRow').style.display = 'flex';
+  updateDateHeader();
+  renderDashboard();
+});
+document.getElementById('btnClearFilter').addEventListener('click', () => {
+  document.getElementById('filterFrom').value = '';
+  document.getElementById('filterTo').value = '';
+  document.getElementById('filterRow').style.display = 'none';
+  currentDate = today();
+  updateDateHeader();
+  renderDashboard();
+});
+
+// Long-press on date nav = open filter
+let pressTimer;
+document.getElementById('dateLabel').parentElement.addEventListener('touchstart', () => {
+  pressTimer = setTimeout(() => {
+    document.getElementById('filterRow').style.display = 'flex';
+    document.getElementById('filterFrom').focus();
+  }, 600);
+});
+document.getElementById('dateLabel').parentElement.addEventListener('touchend', () => clearTimeout(pressTimer));
+
+// Auto-refresh every 30s
+setInterval(() => {
+  if (gsUrl && document.getElementById('mainScreen').style.display !== 'none') {
+    loadData();
+  }
+}, 30000);
+
+// Boot
+init();
+</script>
+</body>
+</html>
