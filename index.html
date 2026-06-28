@@ -451,7 +451,19 @@ let currentTab = 'today';
 let pinInput = '';
 let isSettingUp = false;
 
-function todayStr() { return new Date().toISOString().split('T')[0]; }
+function todayStr() {
+  const n=new Date();
+  const y=n.getFullYear();
+  const m=String(n.getMonth()+1).padStart(2,'0');
+  const d=String(n.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+d;
+}
+function addDays(dateStr, days) {
+  const parts=dateStr.split('-');
+  const d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+  d.setDate(d.getDate()+days);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 
 function fmtRM(v) { return parseFloat(v||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -575,14 +587,16 @@ function renderDashboard() {
 
   const days7=[];
   for(let i=6;i>=0;i--){
-    const d=new Date(currentDate+'T00:00:00');d.setDate(d.getDate()-i);
-    days7.push(d.toISOString().split('T')[0]);
+    days7.push(addDays(currentDate,-i));
   }
   const chartVals=days7.map(d=>getAllTx().filter(({tx})=>{
     const td=tx.date||(tx.capturedAt||'').split('T')[0]||'';
     return td===d&&!isCancelled(tx);
   }).reduce((s,{tx})=>s+getTxTotal(tx),0));
-  const chartLabels=days7.map(d=>new Date(d+'T00:00:00').toLocaleDateString('en-MY',{weekday:'short',day:'numeric'}));
+  const chartLabels=days7.map(d=>{
+    const p=d.split('-');
+    return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2])).toLocaleDateString('en-MY',{weekday:'short',day:'numeric'});
+  });
 
   const opEntries=Object.entries(byOp).sort((a,b)=>b[1].total-a[1].total);
   const countryEntries=Object.entries(byCountry).sort((a,b)=>b[1]-a[1]).slice(0,5);
@@ -769,25 +783,24 @@ function switchTab(tab) {
 
 /* ── DATE NAV ── */
 function updateDateHeader() {
-  const d=new Date(currentDate+'T00:00:00');
+  const parts=currentDate.split('-');
+  const d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
   const t=todayStr();
-  const y=new Date();y.setDate(y.getDate()-1);const yStr=y.toISOString().split('T')[0];
+  const yStr=addDays(t,-1);
   if(currentDate===t) document.getElementById('dateLabel').textContent='Today';
   else if(currentDate===yStr) document.getElementById('dateLabel').textContent='Yesterday';
   else document.getElementById('dateLabel').textContent=d.toLocaleDateString('en-MY',{weekday:'long',day:'numeric',month:'short'});
   document.getElementById('dateSub').textContent=d.toLocaleDateString('en-MY',{day:'2-digit',month:'long',year:'numeric'});
 }
 
-document.getElementById('btnPrev').onclick=()=>{
-  const d=new Date(currentDate+'T00:00:00');d.setDate(d.getDate()-1);
-  currentDate=d.toISOString().split('T')[0];
+document.getElementById('btnPrev').addEventListener('click',()=>{
+  currentDate=addDays(currentDate,-1);
   updateDateHeader();renderView();
-};
-document.getElementById('btnNext').onclick=()=>{
-  const d=new Date(currentDate+'T00:00:00');d.setDate(d.getDate()+1);
-  currentDate=d.toISOString().split('T')[0];
+});
+document.getElementById('btnNext').addEventListener('click',()=>{
+  currentDate=addDays(currentDate,1);
   updateDateHeader();renderView();
-};
+});
 document.getElementById('btnToday').onclick=()=>{
   currentDate=todayStr();updateDateHeader();renderView();
 };
